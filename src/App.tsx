@@ -18,18 +18,17 @@ const initialData: StudentData = {
 const App = () => {
   const [studentData, setStudentData] = useState<StudentData>(initialData);
 
-  const handleSelectChange = (
-    aspek: string,
-    mahasiswa: string,
-    value: number
-  ) => {
-    setStudentData((prevData) => ({
-      ...prevData,
-      [aspek]: {
-        ...prevData[aspek],
-        [mahasiswa]: value
-      }
-    }));
+  const handleSelectChange = (aspek: string, mahasiswa: string, value: number) => {
+    setStudentData((prevData) => {
+      const updatedData = {
+        ...prevData,
+        [aspek]: {
+          ...prevData[aspek],
+          [mahasiswa]: value
+        }
+      };
+      return updatedData;
+    });
   };
 
   const renderTableHeader = () => {
@@ -44,6 +43,8 @@ const App = () => {
     );
   };
 
+  console.log("student", studentData)
+
   const renderTableRow = (mahasiswa: string) => {
     return (
       <tr key={mahasiswa}>
@@ -56,7 +57,7 @@ const App = () => {
               handleSelectChange("aspek_penilaian_1", mahasiswa, parseInt(e.target.value))
             }
           >
-            <option value="">- Pilih -</option>
+            <option value={0}>0</option>
             {renderOptions()}
           </select>
         </td>
@@ -68,7 +69,7 @@ const App = () => {
               handleSelectChange("aspek_penilaian_2", mahasiswa, parseInt(e.target.value))
             }
           >
-            <option value="">- Pilih -</option>
+            <option value={0}>0</option>
             {renderOptions()}
           </select>
         </td>
@@ -80,7 +81,7 @@ const App = () => {
               handleSelectChange("aspek_penilaian_3", mahasiswa, parseInt(e.target.value))
             }
           >
-            <option value="">- Pilih -</option>
+            <option value={0}>0</option>
             {renderOptions()}
           </select>
         </td>
@@ -92,7 +93,7 @@ const App = () => {
               handleSelectChange("aspek_penilaian_4", mahasiswa, parseInt(e.target.value))
             }
           >
-            <option value="">- Pilih -</option>
+            <option value={0}>0</option>
             {renderOptions()}
           </select>
         </td>
@@ -127,22 +128,56 @@ const App = () => {
     return students.map((student) => renderTableRow(student));
   };
 
-  const renderDataJson = () => {
-    return JSON.stringify(studentData, null, 2);
+  const renderDataJson = (): string => {
+    const newData: StudentData = {
+      aspek_penilaian_1: {},
+      aspek_penilaian_2: {},
+      aspek_penilaian_3: {},
+      aspek_penilaian_4: {}
+    };
+  
+    // Iterate over the student data and restructure it
+    Object.keys(studentData).forEach((aspek: string) => {
+      const aspekData = studentData[aspek];
+      const newAspekData: { [mahasiswa: string]: number } = {};
+  
+      const students = [
+        "Mahasiswa 1",
+        "Mahasiswa 2",
+        "Mahasiswa 3",
+        "Mahasiswa 4",
+        "Mahasiswa 5",
+        "Mahasiswa 6",
+        "Mahasiswa 7",
+        "Mahasiswa 8",
+        "Mahasiswa 9",
+        "Mahasiswa 10"
+      ];
+  
+      students.forEach((student: string) => {
+        const mahasiswaNumber = student.split(" ")[1];
+        newAspekData[`mahasiswa_${mahasiswaNumber}`] = aspekData[student] || 0;
+      });
+  
+      newData[aspek] = newAspekData;
+    });
+  
+    return JSON.stringify(newData, null, 2);
   };
 
-  const downloadDataAsJSON = (data: StudentData, filename: string) => {
-    const jsonData = JSON.stringify(data);
-    const blob = new Blob([jsonData], { type: 'application/json' });
+  const downloadDataAsJSON = () => {
+    const jsonData = renderDataJson();
+    const filename = "studentdata.json";
+    const blob = new Blob([jsonData], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -152,7 +187,7 @@ const App = () => {
       </table>
       <div style={{ display: "flex", justifyContent: "flex-end", margin: `10px 0px 10px 0px` }}>
         <button
-        onClick={()=>downloadDataAsJSON(studentData, "studentdata")}
+          onClick={() => downloadDataAsJSON()}
           style={{
             width: `20%`, background: 'black', color: "white"
           }}>Simpan</button>
